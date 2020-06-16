@@ -77,8 +77,9 @@ def request_variant(variant,df,putative_impact,output,maf_value):
     url='http://myvariant.info/v1/variant/'
     url=url+variant
     print(url)
+    tmp=0
     parameters= 'fields=snpeff'
-    for i in range(2):
+    for i in range(1):
         try:
             r = requests.get(url,params=parameters,timeout=6.0)
             json_data=r.json()
@@ -86,7 +87,7 @@ def request_variant(variant,df,putative_impact,output,maf_value):
             if true==True:
                 print("bad")
             else:
-                variant_putative_impact(variant, df,json_data,putative_impact,output,maf_value)
+                tmp=2
                 continue
         except requests.HTTPError as e:
             print("Sorry!! Connection Error. \n")
@@ -106,7 +107,9 @@ def request_variant(variant,df,putative_impact,output,maf_value):
             continue
         except KeyboardInterrupt:
             print("Someone closed the program")
-    
+    if tmp==2:
+        variant_putative_impact(variant, df,json_data,putative_impact,output,maf_value)
+
 
 
 def variant_putative_impact(variant, df,json_data,putative_impact,output,maf_value):
@@ -132,31 +135,7 @@ def variant_putative_impact(variant, df,json_data,putative_impact,output,maf_val
 
 def add_annotation(json_data, num,df,output):
     print("annotate")
-    # if num ==1:
-    #     data_parsed=json_data['snpeff']['ann']
-    #     length_data = len(data_parsed) - 1
 
-    #     data_to_file = open(output, 'w', newline='')
-    #     csv_writer = csv.writer(data_to_file, delimiter=";")
-    #     csv_writer.writerow(["id","name","city","country","member count","average age","founded_date","past_rsvps","rsvps_per_event","repeat_rsvpers","gender_unknown","gender_female","gender_male","gender_other"])
-    
-    #     for i in range(0, length_data):
-    #         meetup = data_parsed[i]
-    #         effect = meetup['effect']
-    #         feature_id = meetup['feature_id']
-    #         feature_type = meetup['feature_type']
-    #         gene_id = meetup['gene_id']
-    #         genename = meetup['genename']
-    #         hgvs_c = meetup['hgvs_c']
-    #         hgvs_p = meetup['hgvs_p']
-    #         putative_impact = meetup['putative_impact']
-    #         rank = meetup['rank']
-    #         total = meetup['total']
-    #         transcript_biotype = meetup['transcript_biotype']
-    #         csv_writer.writerow([effect,feature_id,feature_type,genename,hgvs_c,hgvs_p,putative_impact,rank,total,repeat_rsvpers,transcript_biotype])
-    #     data_to_file.close()
-    # elif num==2:
-    #     print("nnnn")
 
 
 #######################################
@@ -180,6 +159,7 @@ def maf_function(df,variant,output,maf_value):
     url='http://myvariant.info/v1/variant/'
     url=url+variant
     print(url)
+    tmp=0
     parameters= 'fields=exac.alleles,exac.af'
     for i in range(2):
         try: 
@@ -189,7 +169,7 @@ def maf_function(df,variant,output,maf_value):
             if true==True:
                 print("bad")
             else:
-                variant_maf(variant, df,json_MAF,output,maf_value)
+                tmp=2
                 continue
         except requests.HTTPError as e:
             print("Sorry!! Connection Error. \n")
@@ -208,7 +188,8 @@ def maf_function(df,variant,output,maf_value):
             continue
         except KeyboardInterrupt:
             print("Someone closed the program")
-   
+    if tmp==2:
+        variant_maf(variant, df,json_MAF,output,maf_value)
     
     
 #######################################
