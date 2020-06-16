@@ -43,7 +43,6 @@ def check_format(file,putative_impact,output,maf_value):
         parser.print_help() #print the help link to the parser
 
 def parse_file(file,putative_impact,output,maf_value):
-    lines=[]
     tmp=0
     x=-1
     variant=''
@@ -82,7 +81,13 @@ def request_variant(variant,df,putative_impact,output,maf_value):
     for i in range(2):
         try:
             r = requests.get(url,params=parameters,timeout=6.0)
-            print(r.url)
+            json_data=r.json()
+            true='success' in json_data
+            if true==True:
+                print("bad")
+            else:
+                variant_putative_impact(variant, df,json_data,putative_impact,output,maf_value)
+                continue
         except requests.HTTPError as e:
             print("Sorry!! Connection Error. \n")
             print(str(e))
@@ -101,7 +106,11 @@ def request_variant(variant,df,putative_impact,output,maf_value):
             continue
         except KeyboardInterrupt:
             print("Someone closed the program")
-        json_data=r.json()
+    
+
+
+def variant_putative_impact(variant, df,json_data,putative_impact,output,maf_value):
+
     num=0
     try:
         variable=json_data['snpeff']['ann']['putative_impact']
@@ -120,6 +129,7 @@ def request_variant(variant,df,putative_impact,output,maf_value):
             # add_annotation(json_data, num,df)
             maf_function(df,variant,output,maf_value)
             print(2)
+
 
 def add_annotation(json_data, num,df,output):
     print("annotate")
@@ -184,15 +194,33 @@ def maf_function(df,variant,output,maf_value):
     print(json_MAF)
     try:
         variable=json_MAF['exac']['af']
-        print (variable) 
-        if variable<maf_value:
-            print
-            write_value()    
+        print (variable)
+        maf_value=int(maf_value)
+        if variable<0.001:
+            print("right")
+            write_value(json_MAF)    
     except:
         print("Don't have af value for this variant")
         
 
     
+#######################################
+##    Functions write outputfile     ##
+#######################################
+
+def write_value(json_MAF):
+    print("gateau")
+
+
+
+
+
+
+
+# def fusion_file():
+
+
+
 
     
 
