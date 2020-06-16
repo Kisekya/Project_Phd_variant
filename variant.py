@@ -110,7 +110,6 @@ def request_variant(variant,df,putative_impact,output,maf_value):
 
 
 def variant_putative_impact(variant, df,json_data,putative_impact,output,maf_value):
-
     num=0
     try:
         variable=json_data['snpeff']['ann']['putative_impact']
@@ -163,6 +162,19 @@ def add_annotation(json_data, num,df,output):
 #######################################
 ##    Functions  Variant  frequency  ##
 #######################################
+def variant_maf(variant, df,json_MAF,output,maf_value):
+        print(json_MAF)
+        try:
+            variable=json_MAF['exac']['af']
+            print (variable)
+            # maf_value=int(maf_value)
+            if variable<0.001:
+                print("right")
+                write_value(json_MAF)    
+        except:
+            print("Don't have af value for this variant")
+        
+
 
 def maf_function(df,variant,output,maf_value):
     url='http://myvariant.info/v1/variant/'
@@ -170,9 +182,15 @@ def maf_function(df,variant,output,maf_value):
     print(url)
     parameters= 'fields=exac.alleles,exac.af'
     for i in range(2):
-        try:
-            r = requests.get(url,params=parameters,timeout=6.0)
-            print(r.url)
+        try: 
+            r = requests.get(url,params=parameters,timeout=6.0)   
+            json_MAF=r.json()
+            true='success' in json_MAF
+            if true==True:
+                print("bad")
+            else:
+                variant_maf(variant, df,json_MAF,output,maf_value)
+                continue
         except requests.HTTPError as e:
             print("Sorry!! Connection Error. \n")
             print(str(e))  
@@ -190,26 +208,15 @@ def maf_function(df,variant,output,maf_value):
             continue
         except KeyboardInterrupt:
             print("Someone closed the program")
-    json_MAF=r.json()
-    print(json_MAF)
-    try:
-        variable=json_MAF['exac']['af']
-        print (variable)
-        maf_value=int(maf_value)
-        if variable<0.001:
-            print("right")
-            write_value(json_MAF)    
-    except:
-        print("Don't have af value for this variant")
-        
-
+   
+    
     
 #######################################
 ##    Functions write outputfile     ##
 #######################################
 
 def write_value(json_MAF):
-    print("gateau")
+    print("write")
 
 
 
