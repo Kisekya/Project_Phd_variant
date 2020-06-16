@@ -11,31 +11,78 @@ from requests import ReadTimeout, ConnectTimeout, HTTPError, Timeout, Connection
 import urllib.response
 import json
 # import fileinput
-# import re
+import re
 import pandas as pd
+from pandas import DataFrame
 
 
 #Test
 # chr9:g.140695360G>A
 #chr16:g.28883241A>G
 
-#######################
-##    Functions      ##
-#######################
+############################
+##    Functions  Files    ##
+############################
 #Function for check the format and print the help if its not a right format
 def check_format(file):
+    variant=""
     if file.lower().endswith(('.txt')):
-        # parse_file(file)
+        parse_file(file)
         print("txt")
     else:
         print("Sorry, your input is not found. Please refer to the help.")
         parser.print_help() #print the help link to the parser
 
+def parse_file(file):
+    lines=[]
+    tmp=0
+    x=-1
+    variant=''
+    df = pd.read_csv(file, sep="\t", dtype = {"Position" : "object"},header=0)
+    for index, row in df.head().iterrows():
+        for i in row:
+            print(i)
+            tmp+=1
+            x+=1
+            # x+=1
+            if tmp==4:
+                variant+=i
+                request_variant(variant)
+                tmp=0
+                x=0
+                variant=''
+            elif tmp<=4:
+                variant+=i
+                if tmp==1:
+                    variant+=":g."
+                elif tmp==3:
+                    variant+=">"
+                
 
 
-def request_variant():
+
+
+
+
+
+    
+
+#     with open(file) as f:
+#         file=f.read().split("\n")
+#         print(file)
+#         i=0
+#         for line in file:
+#             print(file[i])
+#             i+=1 TO FINISH
+
+
+
+#####################################
+##    Functions  Variant  effects  ##
+#####################################
+
+def request_variant(variant): 
     url='http://myvariant.info/v1/variant/'
-    variant='chr16:g.28883241A>G'
     url=url+variant
     print(url)
     parameters= 'fields=snpeff'
@@ -70,7 +117,7 @@ def request_variant():
         # add_annotation(json_data, num)
     except:
         for i in json_data['snpeff']['ann']:
-            if i['putative_impact']== "MODERATE":
+            if i['putative_impact']== "HIGH":
                 num=2
             else:
                 continue
@@ -100,21 +147,6 @@ def request_variant():
     
 
     
-def parse_file(file):
-    df = open('file.txt', "r")
-    lines = df.readlines()
-    df.close()
-    for index, line in enumerate(lines):
-      lines[index] = line.strip()
-    
-
-#     with open(file) as f:
-#         file=f.read().split("\n")
-#         print(file)
-#         i=0
-#         for line in file:
-#             print(file[i])
-#             i+=1 TO FINISH
 
 #######################
 ##      Main         ##
@@ -134,7 +166,7 @@ if __name__=='__main__':
     putative_impact=args.impact
     maf_value = args.value
     output= args.output
-    request_variant()
+    # request_variant()
     check_format(file)
 
    
