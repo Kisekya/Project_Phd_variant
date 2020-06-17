@@ -76,34 +76,22 @@ def parse_file(file,putative_impact,output):
 ##    Functions write outputfile     ##
 #######################################
 
-def write_table(json_MAF,json_data,df,output,selection_ann,annotate_af):
-    write_csv("csv1.csv", selection_ann)
-    write_csv("csv2.csv",json_data)
-    write_csv("af.csv",annotate_af)
-
-
-def write_csv(output,selection):
-    data_to_file = open(output, 'w', newline='')
-    csv_writer = csv.writer(data_to_file,delimiter=";")
-    # Counter variable used for writing  
-    # headers to the CSV file 
-
-    #test append
-    count = 0
+def write_table(json_MAF,json_data,df,output,selection_ann,annotate_af, variant):
+    write_csv("csv1.csv", selection_ann,output,annotate_af, variant)
     
-    ann_data = selection
-    for emp in ann_data: 
-        if count == 0: 
+#Add the MAF values and convert in csv file
+def write_csv(output_selection,selection_ann,output,annotate_af,variant):
+    df = pd.DataFrame(selection_ann)
+    df["MAF"]=annotate_af
+    df["ID"]=variant
+    print(df) #print a data frame with the transcips and the MAF in the terminal
+    df.to_csv(output_selection, mode='a', header=0)
+#mode a to not errase last row    
+    from more_itertools import unique_everseen # Delete possible doublon
+    with open(output_selection,'r') as f, open(output,'w') as out_file:
+        out_file.writelines(unique_everseen(f))
         
-            # Writing headers of CSV file 
-            header = emp.keys() 
-            csv_writer.writerow(header) 
-            count += 1
-    
-        # Writing data of CSV file 
-        csv_writer.writerow(emp.values()) 
-    
-    data_file.close() 
+
 
 #####################################
 ##    Functions  Variant  effects  ##
@@ -149,10 +137,11 @@ def request_variant(variant,df,putative_impact,output):
     if tmp==2: 
         variant_putative_impact(variant, df,json_data,putative_impact,output)
         
+        
 
 #Function for select only the data with the specific parameters for the putative_impact, parameter define by the user
 def variant_putative_impact(variant, df,json_data,putative_impact,output):
-    try: #Permit to verify if we have multiple trand
+    try: #Permit to verify if we have simple or multiple  transcripts
         variable=json_data['snpeff']['ann']['putative_impact']
         if variable==putative_impact:
             selection_ann=json_data['snpeff']['ann']
@@ -160,12 +149,11 @@ def variant_putative_impact(variant, df,json_data,putative_impact,output):
             maf_function(df,json_data,variant,output,selection_ann)
     except:
         for i in json_data['snpeff']['ann']:
-            for j in json_data['snpeff']['ann']:
-                #print(j)
+            for j in json_data['snpeff']['ann']: # For select each transcripts in the ann of the json 
                 if j['putative_impact']== putative_impact:
                     selection_ann2=j
                     maf_function(df,json_data,variant,output,selection_ann2)
-                    print(selection_ann2) #show the json with the data only with a putative_impact : HIGH
+                    #print(selection_ann2) #show the json with the data only with a putative_impact : HIGH
                 else:
                     continue
 
@@ -179,30 +167,38 @@ def variant_putative_impact(variant, df,json_data,putative_impact,output):
 #######################################
 ##    Functions  Variant  frequency  ##
 #######################################
+
+#Function for select only the data with the specific parameters for maf , 
+#could be a parameter define by the user but in this program, define directly in the script
 def variant_maf(variant,json_data, df,json_MAF,output,selection_ann):
-        # print(json_MAF)
+        # print(json_MAF)  #show the json with the data of MAF
         try:
+            # false='exac' not in json_MAF
             annotate_af=json_MAF['exac']['af']
-            # print (annotate_af)
-            if annotate_af<0.001:
-                # print("right")
-                write_table(json_MAF,json_data,df,output,selection_ann,annotate_af)    
+            if annotate_af<0.001: #For select af from the preselect data from the variant_putative_impact function
+                #print (annotate_af) #show the json with the data only with a putative_impact : HIGH AND MAF<0.001
+                write_table(json_MAF,json_data,df,output,selection_ann,annotate_af, variant)  
+            elif 'af' not in json_MAF:#Verify if the json had doesn't have a exac 
+                annotate_af="NA"
+        
+                write_table(json_MAF,json_data,df,output,selection_ann,annotate_af, variant)  
         except:
-            print("Don't have af value for this variant")
+            pass
+            
         
 
-
+#Function for requests for the MAF and verifiy if the connection is good or if the url is correct
 def maf_function(df,json_data,variant,output,selection_ann):
     url='http://myvariant.info/v1/variant/'
     url=url+variant
-    # print(url)
     tmp=0
     parameters= 'fields=exac.alleles,exac.af'
     for i in range(2):
         try: 
             r = requests.get(url,params=parameters,timeout=6.0)   
             json_MAF=r.json()
-            true='success' in json_MAF
+            #print(json_MAF) #Show the json of the request
+            true='success' in json_MAF #Verify if the json is correct or not, if not contnue with others variants ID 
             if true==True:
                 continue
             else:
@@ -250,8 +246,9 @@ if __name__=='__main__':
     #save our parameters in variables
     file = args.input
     putative_impact=args.impact
-  
     output= args.output
+
+
     check_format(file,putative_impact,output)
   
 
